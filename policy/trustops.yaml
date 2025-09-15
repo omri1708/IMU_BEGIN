@@ -3,6 +3,6 @@ grounding:
   nli_threshold: 0.72
   require_provenance: true
 cost:
-  max_usd_per_call: 0.05
+  max_usd_per_call: 0.1
 approvals:
   merge_required: ["owner"]

@@ -24,13 +24,13 @@ from sqlalchemy import Column, Integer, String, Text, Boolean, Float, CheckConst
 Base = declarative_base()
 '''
 
-T_MODEL_ROW = ""class {cls}(Base):
+T_MODEL_ROW = '''class {cls}(Base):
     __tablename__ = '{tbl}'
 {cols}
     __table_args__ = (
 {tbl_args}
     )
-""
+'''
 
 T_COL = "    {name} = Column({type}{opts})\n"
 
@@ -48,7 +48,7 @@ models.Base.metadata.create_all(bind=engine)
 router = APIRouter(prefix='/api')
 '''
 
-T_API_CRUD = ""
+T_API_CRUD = '''
 @router.post('/{route}', response_model=dict)
 def create_{route}(req: Request):
     role = req.headers.get('X-Role','user')
@@ -63,12 +63,12 @@ async def list_{route}(req: Request):
     def pick(r):
         return {{k: getattr(r, k) for k in item_fields}}
     return [pick(r) for r in rows]
-""
+'''
 
-T_MAIN_INCLUDE = ""
+T_MAIN_INCLUDE = '''
 from .api import router as api_router
 app.include_router(api_router)
-""
+'''
 
 T_NEXT_IDX = "export default function Home(){return <main>Home</main>}\n"
 

@@ -35,9 +35,10 @@ def _best_source_for(sentence: str, sources: List[Dict[str,Any]]) -> Dict[str,An
 
 
 def compute_citations(answer: str, sources: List[Dict[str,Any]]) -> Dict[str,Any]:
-    ""Return per-token and per-chunk citations without provider dependence.
+    '''
+    Return per-token and per-chunk citations without provider dependence.
     sources: list of {id, text, meta}
-    ""
+    '''
     tokens = _tokens(answer)
     per_token = [None]*len(tokens)
     chunks: List[Dict[str,Any]] = []

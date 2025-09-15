@@ -4,9 +4,9 @@ import yaml, json, textwrap
 from planner_advanced.asyncapi import gen_asyncapi
 from planner_advanced.openapi import gen_openapi
 
-T_APP = ""from fastapi import FastAPI\nfrom server.middleware.otel import instrument_app\nfrom server.middleware.trustops import attach_trustops\nfrom server.middleware.redaction import attach_redaction\nfrom server.middleware.opa_enforcer import attach_opa\napp = FastAPI(title='{name}')\ninstrument_app(app)\nattach_trustops(app)\nattach_redaction(app)\nattach_opa(app)\n@app.get('/healthz')\ndef health(): return {{'ok':True}}\n""
+T_APP = '''from fastapi import FastAPI\nfrom server.middleware.otel import instrument_app\nfrom server.middleware.trustops import attach_trustops\nfrom server.middleware.redaction import attach_redaction\nfrom server.middleware.opa_enforcer import attach_opa\napp = FastAPI(title='{name}')\ninstrument_app(app)\nattach_trustops(app)\nattach_redaction(app)\nattach_opa(app)\n@app.get('/healthz')\ndef health(): return {{'ok':True}}\n'''
 
-T_API = ""from fastapi import APIRouter\nrouter = APIRouter(prefix='/api')\n# TODO: generated endpoints\n""
+T_API = '''from fastapi import APIRouter\nrouter = APIRouter(prefix='/api')\n''' # TODO: generated endpoints\n
 
 
 def generate_microservices(spec_path='.imu_runs/spec.json', base='services/micro'):

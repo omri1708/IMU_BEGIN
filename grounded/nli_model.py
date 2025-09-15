@@ -3,7 +3,12 @@ import os, json
 from typing import List, Tuple
 
 class NLIEstimator:
-
+    '''
+    Real NLI with graceful fallback.
+    Prefers sentence-transformers CrossEncoder 'cross-encoder/nli-deberta-v3-base'.
+    Falls back to transformers zero-shot 'facebook/bart-large-mnli'.
+    Returns entailment score in [0,1].
+    '''
     def __init__(self, model_name: str | None = None, device: str | None = None):
         self.device = device
         self.model_name = model_name

@@ -13,7 +13,7 @@ Z_RESOLVER = "import { zodResolver } from '@hookform/resolvers/zod'\n"
 RHF_IMPORT = "import { useForm } from 'react-hook-form'\n"
 RBAC_IMPORT = "import { useRole, canEdit, canView } from '../lib/rbac'\n"
 
-FIELD_COMP = ""
+FIELD_COMP = '''
 import React from 'react'
 export function Field({label, name, register, errors, disabled}:{label:string;name:string;register:any;errors:any;disabled?:boolean}){
   return <div style={{marginBottom:12, opacity: disabled?0.6:1}}>
@@ -22,9 +22,9 @@ export function Field({label, name, register, errors, disabled}:{label:string;na
     {errors?.[name] && <div style={{color:'crimson',fontSize:12}}>{String(errors[name].message||'שדה לא תקין')}</div>}
   </div>
 }
-""
+'''
 
-RBAC_TS = ""
+RBAC_TS = '''
 let _role = 'admin' as 'admin'|'manager'|'user'
 export function setRole(r:'admin'|'manager'|'user'){ _role = r }
 export function useRole(){ return _role }
@@ -40,9 +40,9 @@ export function canEdit(role:string, entity:string, field?:string, rbac:any){
   const allow = (f.editable || e.editable || rbac.entities?.default?.editable || [])
   return allow.includes(role)
 }
-""
+'''
 
-APP_APPEND = ""
+APP_APPEND = '''
 // RBAC RoleProvider: choose role via query (?role=user)
 import { useEffect } from 'react'
 import { setRole } from '../lib/rbac'
@@ -50,9 +50,9 @@ export default function AppWrapper({ Component, pageProps }: any){
   useEffect(()=>{ const p = new URLSearchParams(window.location.search); const r=p.get('role'); if(r) setRole(r as any) },[])
   return <Component {...pageProps} />
 }
-""
+'''
 
-FORM_TS = ""
+FORM_TS = '''
 {z_import}{z_resolver}{rhf_import}{rbac_import}
 import { Field } from '../components/Field'
 import rbac from '../../policy/rbac.json'
@@ -74,7 +74,7 @@ export default function {Cls}Form(){{
     </form>
   </main>
 }}
-""
+'''
 
 Z_RULES = {
   'string': lambda c: "z.string()",
@@ -122,7 +122,7 @@ def generate_forms(db_yaml: str = 'specs/contracts/db.yaml', rbac_yaml: str = 'p
     # _app wrapper (append if not present)
     app = PAGES/'_app.tsx'
     if not app.exists():
-        app.write_text(""import type { AppProps } from 'next/app'\nfunction App({ Component, pageProps }: AppProps){ return <Component {...pageProps} /> }\nexport default App\n"", encoding='utf-8')
+        app.write_text('''import type { AppProps } from 'next/app'\nfunction App({ Component, pageProps }: AppProps){ return <Component {...pageProps} /> }\nexport default App\n''', encoding='utf-8')
     APP_TXT = app.read_text(encoding='utf-8')
     if 'RoleProvider' not in APP_TXT and 'setRole' not in APP_TXT:
         app.write_text(APP_TXT + "\n" + APP_APPEND, encoding='utf-8')

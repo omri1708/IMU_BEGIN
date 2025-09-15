@@ -3,10 +3,10 @@ import os, json, urllib.request
 from typing import List, Dict
 
 class HttpDriver:
-    ""Generic HTTP provider. Env:
+    '''Generic HTTP provider. Env:
     IMU_HTTP_LLM_ENDPOINT (required), IMU_HTTP_LLM_AUTH (optional header value)
     Request:  POST endpoint  {"messages": [...]}  →  {"text": str, "usage": {"prompt":int,"completion":int}}
-    ""
+    '''
     def __init__(self, endpoint: str | None = None):
         self.url = endpoint or os.getenv('IMU_HTTP_LLM_ENDPOINT')
         if not self.url:

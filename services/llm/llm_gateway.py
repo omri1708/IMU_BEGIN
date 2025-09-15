@@ -2,9 +2,9 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional
 import time, json, os, pathlib
-from .tokenizers import count_tokens
 import inspect
 
+from .tokenizers import count_tokens
 # drivers
 from .providers.openai_driver import OpenAIDriver  # type: ignore
 from .providers.azure_openai_driver import AzureOpenAIDriver  # type: ignore
@@ -74,9 +74,9 @@ class LLMGateway:
         return c or [{"provider":"http","model":"default"}]
 
     def complete(self, messages: List[Dict[str, str]],
-             candidates: List[Dict[str, str]] | None = None,
-             budget_usd: float | None = None,
-             tags: Dict[str, Any] | None = None) -> ProviderResult:
+                 candidates: List[Dict[str, str]] | None = None,
+                 budget_usd: float | None = None,
+                 tags: Dict[str, Any] | None = None) -> ProviderResult:
         cand = (candidates or self._candidates())[0]
         provider, model = cand['provider'], cand['model']
         text_in = (messages[-1].get('content') if messages else '')
@@ -119,7 +119,7 @@ class LLMGateway:
         if tags:
             rec["tags"] = tags
         self._emit_kpi(rec)
-        self._emit_kpi(rec)
+        # enforce cost gate
         max_call = (self.policy.get('cost', {}) or {}).get('max_usd_per_call')
         if max_call is not None and res.cost_usd > float(max_call):
             raise RuntimeError(f"CostGate: call cost {res.cost_usd:.4f} > max_usd_per_call={max_call}")
