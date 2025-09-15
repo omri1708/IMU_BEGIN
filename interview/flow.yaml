@@ -1,0 +1,246 @@
+version: 1
+core_min:
+  # minimal set required to start building specs safely (blocking)
+  - use_case
+  - personas
+  - flows
+  - cloud_pref
+
+sections:
+  - id: onboarding
+    title: "ראיון מקדים — איך לדבר איתך"
+    level: pre
+    questions:
+      - id: profile_name
+        label: "איך לפנות אליך? (שם פרטי)"
+        type: text
+        default: "חבר/ה"
+        map_to: ui.profile.name
+      - id: language
+        label: "באיזו שפה להציג לך?"
+        type: choice
+        options: ["עברית","English"]
+        default: "עברית"
+        map_to: ui.profile.language
+      - id: tone
+        label: "איזה סגנון מתאים?"
+        type: choice
+        options: ["ידידותי/אנושי","עסקי/רשמי","טכני"]
+        default: "ידידותי/אנושי"
+        map_to: ui.profile.tone
+      - id: verbosity
+        label: "כמה לפרט בתשובות?"
+        type: choice
+        options: ["תמציתי","רגיל","מפורט"]
+        default: "רגיל"
+        map_to: ui.profile.verbosity
+      - id: visuals
+        label: "להעדיף נקודות/טבלאות/דיאגרמות כשאפשר?"
+        type: choice
+        options: ["כן","לא"]
+        default: "כן"
+        map_to: ui.profile.visuals
+      - id: followups_opt_in
+        label: "תרצה שנציע העמקה עם שאלות קצרות רק כשזה חשוב?"
+        type: choice
+        options: ["כן","לא"]
+        default: "כן"
+        map_to: ui.profile.followups
+
+  - id: domain
+    title: "הקשר עסקי"
+    level: core
+    questions:
+      - id: use_case
+        label: "מה את/ה רוצה שהמערכת תעשה? (במילים פשוטות)"
+        help: "משפט או שניים. בלי מונחים טכניים."
+        type: text
+        required: true
+        gate: blocking
+        map_to: requirements.explicit
+      - id: personas
+        label: "מי ישתמש בזה? (פרסונות עיקריות)"
+        type: multiselect
+        options: ["לקוחות קצה","צוות פנימי","שותפים","מנהלים","אחר"]
+        default: ["לקוחות קצה"]
+        required: true
+        gate: blocking
+        map_to: requirements.personas
+      - id: flows
+        label: "מהן 2–3 הזרימות החשובות?"
+        help: "דוגמה: 'הזמנה→תשלום→חשבונית', 'פנייה→טיפול→סגירה'."
+        type: textarea
+        required: true
+        gate: blocking
+        map_to: requirements.flows
+      - id: industry
+        label: "באיזה תחום? (אם רלוונטי)"
+        type: text
+        default: "כללי"
+        map_to: requirements.industry
+
+  - id: features
+    title: "יכולות"
+    level: optional
+    questions:
+      - id: auth_model
+        label: "אימות והרשאות"
+        type: choice
+        options: ["JWT בסיסי","SSO/OIDC (כניסה עם Google/IdP)","שניהם","לא יודע/ת"]
+        default: "JWT בסיסי"
+        map_to: contracts.auth.type
+      - id: multitenant
+        label: "רב-דייריות (לקוחות/ארגונים נפרדים)?"
+        type: choice
+        options: ["כן","לא","לא יודע/ת"]
+        default: "לא"
+        map_to: arch.constraints.multitenant
+      - id: payments
+        label: "תשלומים/גבייה נדרשים?"
+        type: choice
+        options: ["כן (Stripe)","לא","לא יודע/ת"]
+        default: "לא"
+        map_to: contracts.payments.provider
+      - id: search
+        label: "חיפוש מתקדם?"
+        type: choice
+        options: ["כן (OpenSearch)","בסיסי","לא","לא יודע/ת"]
+        default: "בסיסי"
+        map_to: contracts.search.level
+      - id: notifications
+        label: "התראות (מייל/פוש/ווב-הוקים)?"
+        type: multiselect
+        options: ["Email","Push","Webhooks","אין צורך"]
+        default: ["Email"]
+        map_to: contracts.notifications.channels
+      - id: audit_logs
+        label: "נדרש יומן פעולות (Audit Log)?"
+        type: choice
+        options: ["כן","לא","לא יודע/ת"]
+        default: "כן"
+        map_to: contracts.audit_log.enabled
+
+  - id: nonfunc
+    title: "איכות ואילוצים"
+    level: optional
+    questions:
+      - id: p95
+        label: "יעד ביצועים (p95_latency_ms)"
+        type: choice
+        options: ["<=400","<=800","<=1500","לא יודע/ת"]
+        default: "<=800"
+        map_to: arch.slo.p95_latency_ms
+      - id: ok_rate
+        label: "יעד זמינות/הצלחה (OK rate)"
+        type: choice
+        options: [">=0.99",">=0.995",">=0.997","לא יודע/ת"]
+        default: ">=0.99"
+        map_to: arch.sli.http_ok_rate
+      - id: data_classes
+        label: "איזה סוגי מידע רגישים יש? (אם יש)"
+        type: multiselect
+        options: ["אין","Email","טלפון","אמצעי תשלום","בריאות","מקום","אחר"]
+        default: ["אין"]
+        map_to: arch.constraints.pii_classes
+
+  - id: cloud
+    title: "ענן/סביבה (אנושי, לא טכני)"
+    level: core
+    questions:
+      - id: cloud_pref
+        label: "איפה תרצה להריץ את זה?"
+        type: choice
+        options: ["AWS","GCP","Azure","On-Prem","לא יודע/ת"]
+        default: "AWS"
+        required: true
+        gate: blocking
+        map_to: arch.cloud
+      - id: envs
+        label: "באילו סביבות עובדים?"
+        type: multiselect
+        options: ["dev","staging","prod"]
+        default: ["dev","staging"]
+        map_to: arch.environments
+      - id: data_residency
+        label: "מיקום נתונים נדרש? (למשל EU/IL/US)"
+        type: text
+        default: "N/A"
+        map_to: arch.constraints.data_residency
+
+  - id: policies
+    title: "מדיניות ו‑TrustOps"
+    level: optional
+    questions:
+      - id: evidence_mode
+        label: "עד כמה להקשיח הוכחות (Evidence‑Gate)?"
+        type: choice
+        options: ["מחמיר (Strict)","רגיל (Standard)","כבוי (Off)"]
+        default: "מחמיר (Strict)"
+        map_to: policy.trustops.evidence_mode
+      - id: cost_budget
+        label: "תקציב מקס׳ לשיחה ל‑LLM (USD)"
+        type: choice
+        options: ["0.005","0.01","0.02","0.05","לא יודע/ת"]
+        default: "0.02"
+        map_to: policy.cost.max_usd_per_call
+      - id: allow_web
+        label: "מותר להיעזר באינטרנט?"
+        type: choice
+        options: ["רק מקורות שלי","גם אתרים מאושרים","לא יודע/ת"]
+        default: "רק מקורות שלי"
+        map_to: policy.grounding.web_mode
+      - id: allow_domains
+        label: "אם אינטרנט: אילו דומיינים? (פסיקים/שורות)"
+        type: textarea
+        map_to: policy.grounding.allow_domains
+
+  - id: corpora
+    title: "מקורות וקורפוסים"
+    level: optional
+    questions:
+      - id: internal_sources
+        label: "אילו מקורות פנימיים רלוונטיים? (קישורים/תיקיות)"
+        type: textarea
+        map_to: corpora.internal
+      - id: regulatory_sources
+        label: "רגולציה/נהלים שחייבים להישען עליהם?"
+        type: textarea
+        map_to: corpora.regulatory
+      - id: corpora_ttl
+        label: "תוקף ברירת מחדל למסמכים (TTL)"
+        type: choice
+        options: ["7d","30d","90d"]
+        default: "30d"
+        map_to: corpora.ttl
+
+  - id: approvals
+    title: "אישורים ושערים"
+    level: optional
+    questions:
+      - id: approver_role
+        label: "מי מאשר לפני פריסה ל‑prod?"
+        type: choice
+        options: ["אני","מנהל מוצר","QA","משפטי/רגולציה","אין"]
+        default: "אני"
+        map_to: policy.approvals.merge.required
+      - id: risk_level
+        label: "רמת סיכון/רגישות"
+        type: choice
+        options: ["נמוכה","בינונית","גבוהה"]
+        default: "בינונית"
+        map_to: policy.risk.level
+
+  - id: ux
+    title: "חוויית משתמש"
+    level: optional
+    questions:
+      - id: ux_nav
+        label: "מפת מסכים ראשונית"
+        type: textarea
+        map_to: ui.sitemap
+      - id: tone_override
+        label: "טון לתוכן המוצר (אם שונה מהכללי)"
+        type: choice
+        options: ["כמו בראיון המקדים","עסקי/רשמי","ידידותי/אנושי","טכני"]
+        default: "כמו בראיון המקדים"
+        map_to: ui.tone

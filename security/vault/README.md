@@ -1,0 +1,1 @@
+Use Vault to store secrets; configure IMU to read via hvac in runtime.

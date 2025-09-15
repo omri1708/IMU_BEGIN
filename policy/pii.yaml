@@ -1,0 +1,5 @@
+classes:
+  email:   { mask: 'partial', roles_allow: [admin, manager] }
+  phone:   { mask: 'partial', roles_allow: [admin, manager] }
+  card:    { mask: 'last4',   roles_allow: [admin] }
+  address: { mask: 'coarse',  roles_allow: [admin, manager] }

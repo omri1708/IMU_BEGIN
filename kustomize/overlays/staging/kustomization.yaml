@@ -1,0 +1,1 @@
+resources: ["../../../charts/imu/templates/deploy.yaml", "../../../charts/imu/templates/service.yaml"]

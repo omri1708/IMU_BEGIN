@@ -1,0 +1,9 @@
+roles: [admin, manager, user]
+entities:
+  default:
+    visible:   [admin, manager, user]
+    editable:  [admin, manager]
+  # example overrides per entity/field:
+  # items:
+  #   fields:
+  #     description: { visible: [admin, manager], editable: [admin] }

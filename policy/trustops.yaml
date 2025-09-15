@@ -1,0 +1,8 @@
+grounding:
+  allow_domains: ["docs.example.com", "regulator.gov"]
+  nli_threshold: 0.72
+  require_provenance: true
+cost:
+  max_usd_per_call: 0.02
+approvals:
+  merge_required: ["owner"]

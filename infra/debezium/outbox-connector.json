@@ -1,0 +1,14 @@
+{
+  "name": "imu-outbox-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "db",
+    "database.port": "5432",
+    "database.user": "postgres",
+    "database.password": "postgres",
+    "database.dbname": "app",
+    "tombstones.on.delete": "false",
+    "topic.prefix": "imu",
+    "table.include.list": "public.outbox"
+  }
+}

@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata: { name: imu-api }
+spec:
+  replicas: 2
+  strategy:
+    canary:
+      steps:
+        - setWeight: 10
+        - pause: {duration: 60}
+        - setWeight: 50
+        - pause: {duration: 120}
+        - setWeight: 100
+  selector: { matchLabels: { app: imu-api } }
+  template:
+    metadata: { labels: { app: imu-api } }
+    spec:
+      containers:
+        - name: api
+          image: imu/api:dev
+          ports: [{containerPort: 8000}]

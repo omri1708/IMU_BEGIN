@@ -1,0 +1,14 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: imu-api }
+spec:
+  selector: { matchLabels: { app: imu-api } }
+  template:
+    metadata: { labels: { app: imu-api } }
+    spec:
+      containers:
+        - name: api
+          image: imu/api:dev
+          ports: [{containerPort: 8000}]
+          env:
+            - { name: OTEL_EXPORTER_OTLP_ENDPOINT, value: "http://otel-collector:4317" }

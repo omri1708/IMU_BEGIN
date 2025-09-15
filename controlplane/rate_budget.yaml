@@ -1,0 +1,8 @@
+limits:
+  default_call_cap_usd: 0.02
+  monthly_cap_usd: 50.0
+  per_provider:
+    openai:   { cap_usd: 30.0 }
+    anthropic:{ cap_usd: 30.0 }
+    vertex:   { cap_usd: 20.0 }
+    bedrock:  { cap_usd: 20.0 }

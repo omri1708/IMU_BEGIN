@@ -1,0 +1,15 @@
+?start: (entity | process | policy)+
+entity: "entity" NAME "{" field+ "}"
+field: NAME ":" TYPE constraint* ";"
+process: "process" NAME "{" state+ transition+ invariant* "}"
+state: "state" NAME ";"
+transition: "transition" NAME "->" NAME "on" NAME ("if" EXPR)? ";"
+invariant: "invariant" EXPR ";"
+policy: "policy" NAME "{" rule+ "}"
+rule: NAME ":" EXPR ";"
+
+TYPE: /(int|float|str|text|uuid)/
+EXPR: /[^;\n]+/
+NAME: /[A-Za-z_][A-Za-z0-9_\-]*/
+%import common.WS
+%ignore WS
