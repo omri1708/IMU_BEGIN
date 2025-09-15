@@ -1,5 +1,5 @@
 name: app-cd
-on:
+on: 
   push:
     branches: [ main ]
 jobs:
@@ -8,4 +8,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: echo 'Canary route:'
-      - run: python -c "import ci.canary_router as c; print({'canary': c.route()})"
+      - run: |
+          python -c "import ci.canary_router as c; print({'canary': c.route()})"
