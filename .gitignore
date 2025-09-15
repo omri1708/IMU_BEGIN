@@ -1,0 +1,54 @@
+# --- Python
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+*.pyo
+*.egg-info/
+.dist-info/
+.venv/
+venv/
+.eggs/
+.build/
+dist/
+build/
+.coverage
+coverage.xml
+.pytest_cache/
+
+# --- Node / Next.js
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# --- OS / Editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# --- Env & Secrets
+.env
+.env.*
+.envrc
+secrets/
+*.pem
+*.key
+*.crt
+
+# --- Project Artifacts
+.imu_runs/
+.prov/
+uploads/
+telemetry/
+canary_report.json
+*.sqlite
+*.db
+app.db
+
+# --- Docker
+*.pid
