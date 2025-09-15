@@ -12,7 +12,7 @@ def run_autopatch(test_output_path: str = '.imu_runs/junit.xml'):
     # 2) ask gateway for a patch suggestion
     gw = LLMGateway()
     prompt = {'role':'user','content': f"Tests failing; propose unified diff patch to fix. Context:\n{text[:4000]}"}
-    res = gw.complete([prompt])
+    res = gw.complete([prompt], tags={"task_type": "autopatch", "source": "ci/autopatch.py"})
     diff = res.text
     # 3) apply diff if looks like a patch
     if '--- ' in diff and '+++ ' in diff:

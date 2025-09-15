@@ -52,3 +52,6 @@ app.db
 
 # --- Docker
 *.pid
+
+# --- other
+.M1_TO_30/

@@ -3,6 +3,8 @@ from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional
 import time, json, os, pathlib
 from .tokenizers import count_tokens
+import inspect
+
 # drivers
 from .providers.openai_driver import OpenAIDriver  # type: ignore
 from .providers.azure_openai_driver import AzureOpenAIDriver  # type: ignore
@@ -71,7 +73,10 @@ class LLMGateway:
         if os.getenv('IMU_HTTP_LLM_ENDPOINT'): c.append({"provider":"http","model":"default"})
         return c or [{"provider":"http","model":"default"}]
 
-    def complete(self, messages: List[Dict[str, str]], candidates: List[Dict[str, str]] | None = None, budget_usd: float | None = None) -> ProviderResult:
+    def complete(self, messages: List[Dict[str, str]],
+             candidates: List[Dict[str, str]] | None = None,
+             budget_usd: float | None = None,
+             tags: Dict[str, Any] | None = None) -> ProviderResult:
         cand = (candidates or self._candidates())[0]
         provider, model = cand['provider'], cand['model']
         text_in = (messages[-1].get('content') if messages else '')
@@ -88,7 +93,33 @@ class LLMGateway:
         except Exception as e:
             lat = (time.time() - start) * 1000.0
             res = ProviderResult(provider, model, ptok, 0, 0.0, lat, f"[driver-error] {e}", ok=False)
-        self._emit_kpi({"provider": res.provider, "model": res.model, "ptok": res.prompt_tokens, "ctok": res.completion_tokens, "cost": res.cost_usd, "latency_ms": res.latency_ms, "ok": res.ok})
+        # --------- Auto-tags for KPI ----------
+        caller = None
+        try:
+            stk = inspect.stack()
+            if len(stk) >= 3:
+                frm = stk[2]
+                caller = f"{os.path.basename(frm.filename)}:{frm.function}"
+        except Exception:
+            caller = None
+        rec = {
+            "provider": res.provider,
+            "model": res.model,
+            "ptok": res.prompt_tokens,
+            "ctok": res.completion_tokens,
+            "cost": res.cost_usd,
+            "latency_ms": res.latency_ms,
+            "ok": res.ok,
+            "caller": caller,
+            # useful derived features:
+            "answer_chars": len(res.text or ""),
+            "token_eff": round((res.completion_tokens or 1) / max(1, res.prompt_tokens + res.completion_tokens), 4),
+            "cost_per_token_out": round(res.cost_usd / max(1, res.completion_tokens), 6),
+        }
+        if tags:
+            rec["tags"] = tags
+        self._emit_kpi(rec)
+        self._emit_kpi(rec)
         max_call = (self.policy.get('cost', {}) or {}).get('max_usd_per_call')
         if max_call is not None and res.cost_usd > float(max_call):
             raise RuntimeError(f"CostGate: call cost {res.cost_usd:.4f} > max_usd_per_call={max_call}")
