@@ -1,0 +1,1 @@
+{"api":{"required":["id","path","method"]},"db":{"required":["id","table","columns"]},"ui":{"required":["id","screen","route"]}}
