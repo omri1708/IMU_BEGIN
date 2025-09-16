@@ -54,23 +54,30 @@ export default function AppWrapper({ Component, pageProps }: any){
 
 FORM_TS = '''
 {z_import}{z_resolver}{rhf_import}{rbac_import}
-import { Field } from '../components/Field'
-import rbac from '../../policy/rbac.json'
+import {{ Field }} from '../components/Field'
+import rbac from '../policy/rbac.json'
 
 export default function {Cls}Form(){{
   const role = useRole()
   const Schema = {schema}
   type FormT = z.infer<typeof Schema>
-  const {{ register, handleSubmit, reset, formState: {{ errors }} }} = useForm<FormT>({{ resolver: zodResolver(Schema) }})
+  const {{ register, handleSubmit, reset, formState: {{ errors }} }} =
+    useForm<FormT>({{ resolver: zodResolver(Schema) }})
+
   const onSubmit = async (data:FormT)=>{{
-    const res = await fetch('/api/{route}', {{ method:'POST', headers:{{'Content-Type':'application/json'}}, body: JSON.stringify(data) }})
+    const res = await fetch('/api/{route}', {{
+      method:'POST',
+      headers:{{'Content-Type':'application/json'}},
+      body: JSON.stringify(data)
+    }})
     if(res.ok) reset()
   }}
-  return <main style={{maxWidth:640, margin:'40px auto', fontFamily:'system-ui'}}>
-    <h1 style={{fontSize:24, fontWeight:700, marginBottom:16}}>{Cls} — טופס</h1>
-    <form onSubmit={{handleSubmit(onSubmit)}}>
+
+  return <main style={{{{maxWidth:640, margin:'40px auto', fontFamily:'system-ui'}}}}>
+    <h1 style={{{{fontSize:24, fontWeight:700, marginBottom:16}}}}>{Cls} — טופס</h1>
+    <form onSubmit={{{{handleSubmit(onSubmit)}}}}>
 {fields}
-      <button type='submit' style={{padding:'10px 16px',borderRadius:8}}>שמור</button>
+      <button type='submit' style={{{{padding:'10px 16px', borderRadius:8}}}}>שמור</button>
     </form>
   </main>
 }}
@@ -87,9 +94,12 @@ Z_RULES = {
 def _z_for(col: dict) -> str:
     t = str(col.get('type','str'))
     base = 'string'
-    if 'int' in t: base='int'
-    elif 'float' in t or 'num' in t: base='float'
-    elif 'text' in t: base='text'
+    if 'int' in t:
+        base='int'
+    elif 'float' in t or 'num' in t:
+        base='float'
+    elif 'text' in t:
+       base='text'
     z = Z_RULES[base](col)
     cons = col.get('constraints',{})
     if cons.get('min') is not None:
@@ -111,7 +121,8 @@ def generate_forms(db_yaml: str = 'specs/contracts/db.yaml', rbac_yaml: str = 'p
     db = yaml.safe_load(Path(db_yaml).read_text())
     rbac = yaml.safe_load(Path(rbac_yaml).read_text()) if Path(rbac_yaml).exists() else {'entities':{'default':{'visible':['admin','manager','user'],'editable':['admin','manager']}}}
     # emit rbac.json for frontend
-    POL = Path('web/policy'); POL.mkdir(parents=True, exist_ok=True)
+    POL = Path('web/policy')
+    POL.mkdir(parents=True, exist_ok=True)
     (POL/'rbac.json').write_text(json.dumps(rbac, ensure_ascii=False, indent=2), encoding='utf-8')
 
     # ensure scaffolds
@@ -134,7 +145,8 @@ def generate_forms(db_yaml: str = 'specs/contracts/db.yaml', rbac_yaml: str = 'p
         schema_fields = []
         for c in ent.get('columns', []):
             name = c['name']
-            if c.get('pk'): continue
+            if c.get('pk'):
+                continue
             schema_fields.append(f"  {name}: {_z_for(c)}")
             # RBAC: hide/disable by role
             vis = f"!canView(role, '{tbl}', '{name}', rbac)"

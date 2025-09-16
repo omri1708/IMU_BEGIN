@@ -1,0 +1,20 @@
+{
+  "roles": [
+    "admin",
+    "manager",
+    "user"
+  ],
+  "entities": {
+    "default": {
+      "visible": [
+        "admin",
+        "manager",
+        "user"
+      ],
+      "editable": [
+        "admin",
+        "manager"
+      ]
+    }
+  }
+}

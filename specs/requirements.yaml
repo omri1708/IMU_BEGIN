@@ -1,0 +1,27 @@
+requirements:
+- id: REQ-001
+  title: תבנה כל אפליקציה, בכל רמת מורכבות, ותבנה תודעת משתמש מלאה ועמוקה
+  explicit:
+  - תבנה כל אפליקציה, בכל רמת מורכבות, ותבנה תודעת משתמש מלאה ועמוקה
+  implicit: []
+  priority:
+    moscow: should
+    rice:
+      reach: 70
+      impact: 2
+      confidence: 0.7
+      effort: 2
+      score: 49
+- id: REQ-002
+  title: skip
+  explicit:
+  - skip
+  implicit: []
+  priority:
+    moscow: should
+    rice:
+      reach: 60
+      impact: 2
+      confidence: 0.7
+      effort: 2
+      score: 42

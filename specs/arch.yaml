@@ -1,0 +1,10 @@
+architecture: monolith
+slo:
+  p95_latency_ms: 800
+sli:
+  http_ok_rate: 0.99
+constraints:
+  multitenant: כן
+environments:
+- dev
+- staging

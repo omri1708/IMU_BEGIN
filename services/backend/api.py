@@ -12,17 +12,17 @@ models.Base.metadata.create_all(bind=engine)
 router = APIRouter(prefix='/api')
 item_fields = ['name', 'description']
 
-@router.post('/entities', response_model=dict)
-def create_entities(req: Request):
+@router.post('/items', response_model=dict)
+async def create_items(req: Request):
     role = req.headers.get('X-Role','user')
     data = await req.json()
-    obj = models.Entities(**data)
+    obj = models.Items(**data)
     db = SessionLocal(); db.add(obj); db.commit(); db.refresh(obj)
     return {"id": getattr(obj, 'id', None)}
 
-@router.get('/entities', response_model=list)
-async def list_entities(req: Request):
-    db = SessionLocal(); rows = db.query(models.Entities).all()
+@router.get('/items', response_model=list)
+async def list_items(req: Request):
+    db = SessionLocal(); rows = db.query(models.Items).all()
     def pick(r):
         return {k: getattr(r, k) for k in item_fields}
     return [pick(r) for r in rows]

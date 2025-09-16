@@ -6,7 +6,19 @@ from .ner_pii import NER
 POL = Path('policy/pii.yaml')
 RBAC = Path('policy/rbac.yaml')
 
-NER_ENGINE = NER()
+_NER_ENGINE = None
+def get_ner():
+    global _NER_ENGINE
+    if _NER_ENGINE is None:
+        try:
+            _NER_ENGINE = NER()
+        except Exception:
+            # fallback: רק רג׳קס, בלי מודל
+            class _Dummy:
+                def find(self, text): return []
+                def mask(self, text, role, policy): return text
+            _NER_ENGINE = _Dummy()
+    return _NER_ENGINE
 
 MASKS = {
     'partial': lambda v: (v[:2] + '***' + v[-2:]) if isinstance(v,str) and len(v)>=4 else '***',
@@ -26,6 +38,7 @@ def load_policies():
 
 
 def apply_redaction(obj, role: str, pii: dict, rbac: dict):
+    ner = get_ner()
     if isinstance(obj, dict):
         out = {}
         for k,v in obj.items():
@@ -38,7 +51,7 @@ def apply_redaction(obj, role: str, pii: dict, rbac: dict):
                     allow = role in (pii.get('classes',{}).get(cls,{}).get('roles_allow',[]) or [])
                     out[k] = v if allow else MASKS.get(pii['classes'][cls].get('mask','partial'), MASKS['partial'])(v)
                 else:
-                    out[k] = NER_ENGINE.mask(v, role, pii)
+                    out[k] = ner.mask(v, role, pii)
             else:
                 out[k] = apply_redaction(v, role, pii, rbac)
         return out

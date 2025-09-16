@@ -11,7 +11,12 @@ class NER:
         self.pipe = None
         try:
             from transformers import pipeline  # type: ignore
-            self.pipe = pipeline('token-classification', model='dslim/bert-base-NER', aggregation_strategy='simple')
+            self.pipe = pipeline(
+                'token-classification',
+                model='dslim/bert-base-NER',
+                aggregation_strategy='simple',
+                device=-1  # אל תנסה GPU; מפחית תקלות spawning
+                )
         except Exception:
             self.pipe = None
 

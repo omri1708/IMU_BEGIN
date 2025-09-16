@@ -1,0 +1,19 @@
+name: Gate Audit Max
+on: [pull_request]
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install pyyaml
+      - run: python ops/gate_audit_max.py --json ops/audit.json --md ops/audit.md --sarif ops/audit.sarif
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with: { sarif_file: ops/audit.sarif }
+      - name: Print Markdown summary
+        run: cat ops/audit.md || true

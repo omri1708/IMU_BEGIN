@@ -1,0 +1,8 @@
+ui:
+- id: UI-001
+  req:
+  - REQ-001
+  screen: Items
+  route: /items
+  acceptance:
+  - Create + List

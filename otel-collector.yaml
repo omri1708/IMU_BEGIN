@@ -1,0 +1,9 @@
+receivers:
+  otlp:
+    protocols: { http: {}, grpc: {} }
+exporters:
+  logging: { loglevel: warn }
+processors: { batch: {} }
+service:
+  pipelines:
+    traces: { receivers: [otlp], processors: [batch], exporters: [logging] }

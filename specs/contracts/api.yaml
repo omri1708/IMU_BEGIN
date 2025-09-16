@@ -1,0 +1,15 @@
+api:
+- id: API-001
+  req:
+  - REQ-001
+  path: /items
+  method: POST
+  acceptance:
+  - 200 + persisted
+- id: API-002
+  req:
+  - REQ-001
+  path: /items
+  method: GET
+  acceptance:
+  - 200 + list

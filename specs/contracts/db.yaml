@@ -1,0 +1,13 @@
+db:
+- id: DB-001
+  req:
+  - REQ-001
+  table: items
+  columns:
+  - name: id
+    type: int
+    pk: true
+  - name: name
+    type: str
+  - name: description
+    type: text

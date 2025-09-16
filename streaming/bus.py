@@ -1,6 +1,10 @@
 from __future__ import annotations
-import asyncio, aioredis
+import asyncio 
 from typing import Any, Dict
+try:
+    import redis.asyncio as aioredis
+except ImportError:
+    import aioredis  # shim 2.0.1
 
 class Bus:
     def __init__(self, url: str = 'redis://localhost:6379/0'):

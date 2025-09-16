@@ -4,6 +4,7 @@ __pycache__/
 *.so
 *.pyd
 *.pyo
+*.pyc
 *.egg-info/
 .dist-info/
 .venv/
@@ -49,9 +50,14 @@ canary_report.json
 *.sqlite
 *.db
 app.db
+.imu_provenance/
 
 # --- Docker
 *.pid
 
 # --- other
 .M1_TO_30/
+
+
+
+
