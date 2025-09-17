@@ -3,8 +3,10 @@ grounding:
   web_allowed: false
   nli_threshold: 0.78
   require_provenance: true
+  require_provenance: true
+  nli_threshold: 0.72
 cost:
-  max_usd_per_call: 0.02
+  max_usd_per_call: 0.05
 approvals:
   merge_required:
   - אני

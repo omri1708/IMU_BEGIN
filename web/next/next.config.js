@@ -1,18 +1,10 @@
-// web/next/next.config.js
-const path = require('path')
-
 /** @type {import('next').NextConfig} */
-module.exports = {
-  // פרוקסי: כל /api/... עובר ל-FastAPI המקומי
+const nextConfig = {
   async rewrites() {
     return [
-      {
-        source: '/api/:path*',
-        destination: 'http://localhost:8000/api/:path*',
-      },
-    ]
+      { source: '/api/:path*', destination: 'http://localhost:8000/api/:path*' },
+      { source: '/grounded/:path*', destination: 'http://localhost:8000/grounded/:path*' },
+    ];
   },
-
-  // מסיר את אזהרת "inferred root"
-  outputFileTracingRoot: path.join(__dirname),
-}
+};
+module.exports = nextConfig;

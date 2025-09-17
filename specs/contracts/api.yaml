@@ -13,3 +13,17 @@ api:
   method: GET
   acceptance:
   - 200 + list
+  # מיפוי ל-REQ-002 (למשל מחיקה)
+- id: API-003
+  req: [REQ-002]
+  path: /api/items/{id}
+  method: DELETE
+
+- id: API-ITEMS-LIST
+  path: /api/items
+  method: GET
+  req: ["REQ-001"]
+- id: API-ITEMS-CREATE
+  path: /api/items
+  method: POST
+  req: ["REQ-001"]

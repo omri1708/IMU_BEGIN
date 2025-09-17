@@ -1,13 +1,18 @@
 db:
-- id: DB-001
-  req:
-  - REQ-001
-  table: items
-  columns:
-  - name: id
-    type: int
-    pk: true
-  - name: name
-    type: str
-  - name: description
-    type: text
+  - id: DB-001
+    req: [REQ-001]
+    table: items
+    columns:
+      - { name: id,          type: int,   pk: true }
+      - { name: name,        type: str,   constraints: { required: true, min: 1 } }
+      - { name: description, type: text }
+
+
+  # אותה טבלה אבל גם מכסה את REQ-002 (מחיקה/עדכון)
+  - id: DB-002
+    req: [REQ-002]
+    table: items
+    columns:
+      - { name: id,          type: int,   pk: true }
+      - { name: name,        type: str }
+      - { name: description, type: text }

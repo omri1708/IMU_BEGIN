@@ -1,9 +1,15 @@
 receivers:
   otlp:
-    protocols: { http: {}, grpc: {} }
+    protocols:
+      http: {}
+      grpc: {}
+processors:
+  batch: {}
 exporters:
-  logging: { loglevel: warn }
-processors: { batch: {} }
+  debug: {}   # מחליף את logging
 service:
   pipelines:
-    traces: { receivers: [otlp], processors: [batch], exporters: [logging] }
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
