@@ -1,11 +1,11 @@
 from __future__ import annotations
-from fastapi import APIRouter, Path
+from fastapi import APIRouter
 from pydantic import BaseModel
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from typing import List
 from . import models
-from fastapi import HTTPException
+from fastapi import HTTPException, Request
+from server.middleware.redaction_core import load_policies, apply_redaction
 
 DB_URL = 'sqlite:///./app.db'
 engine = create_engine(DB_URL, connect_args={"check_same_thread": False})
@@ -66,13 +66,13 @@ async def delete_items(item_id: int):
 
 # --- debug PII sample (לבדיקת רדקציה/מדיניות) ---
 @router.get("/debug/pii")
-def debug_pii():
-    # ה-middleware של הרדקציה יטשטש לפי policy/pii.yaml
-    return {
+def debug_pii(req: Request):
+    sample = {
         "email": "demo@example.com",
         "phone": "+1 555 123 4567",
         "credit_card": "4242 4242 4242 4242",
-        "note": "This is a non-PII field"
+        "note": "This is a non-PII field",
     }
-
-
+    pii, rbac = load_policies()
+    role = req.headers.get("X-Role", "user")
+    return apply_redaction(sample, role, pii, rbac)
