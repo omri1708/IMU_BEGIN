@@ -64,6 +64,15 @@ async def delete_items(item_id: int):
     db.commit()
     return {"ok": True}
 
-
+# --- debug PII sample (לבדיקת רדקציה/מדיניות) ---
+@router.get("/debug/pii")
+def debug_pii():
+    # ה-middleware של הרדקציה יטשטש לפי policy/pii.yaml
+    return {
+        "email": "demo@example.com",
+        "phone": "+1 555 123 4567",
+        "credit_card": "4242 4242 4242 4242",
+        "note": "This is a non-PII field"
+    }
 
 

@@ -59,3 +59,31 @@ def grounded_demo(
         "latency_ms": lat,
         "ok": ok,
     }
+
+@router.get("/grounded/strict")
+def grounded_strict(
+    q: str = Query("Summarize Items"),
+    src_text: str = Query("Items are records with name and description, saved via /api/items.")
+):
+    sources = [{"id":"s1","text":src_text}]
+    messages = [
+        {"role":"system",
+         "content": "Answer STRICTLY and ONLY from SOURCE. If not enough info, reply exactly: 'insufficient evidence'. 1–2 sentences."},
+        {"role":"user",
+         "content": f"SOURCE:\n<<<\n{src_text}\n>>>\nQUESTION:\n{q}\nAnswer strictly from SOURCE."}
+    ]
+    gw = Gateway()
+    res = gw.complete(messages)
+    answer = (res.text or "").strip() or "insufficient evidence"
+    cits = compute_citations(answer, sources)
+    return {
+        "answer": answer,
+        "sources": sources,
+        "citations": cits,
+        "coverage": len([t for t in cits["per_token"] if t]) / max(1, len(cits["per_token"])),
+        "provider": getattr(res,"provider","openai"),
+        "model": getattr(res,"model","gpt-4o-mini"),
+        "cost_usd": round(getattr(res,"cost_usd",0.0), 6),
+        "latency_ms": int(getattr(res,"latency_ms",0)),
+        "ok": bool(getattr(res,"ok",True)),
+    }
