@@ -10,7 +10,8 @@ import os, json, pathlib, time
 
 class JsonlSpanExporter(SpanExporter):
     def __init__(self, path: str = '.imu_runs/otel_spans.jsonl'):
-        self.p = pathlib.Path(path); self.p.parent.mkdir(parents=True, exist_ok=True)
+        self.p = pathlib.Path(path)
+        self.p.parent.mkdir(parents=True, exist_ok=True)
     def export(self, spans):
         with self.p.open('a', encoding='utf-8') as f:
             for s in spans:
@@ -31,10 +32,15 @@ class JsonlSpanExporter(SpanExporter):
 
 
 def instrument_app(app: FastAPI, service_name: str = 'imu-api') -> None:
-    endpoint = os.getenv('OTEL_EXPORTER_OTLP_ENDPOINT', 'http://localhost:4317')
+    endpoint = os.getenv('OTEL_EXPORTER_OTLP_ENDPOINT', '')
     resource = Resource.create({"service.name": service_name})
     provider = TracerProvider(resource=resource)
-    provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=endpoint, insecure=True)))
+    # JSONL תמיד נשאר
     provider.add_span_processor(BatchSpanProcessor(JsonlSpanExporter()))
+
+    # OTLP רק אם באמת הוגדר
+    if endpoint:
+        provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=endpoint, insecure=True)))
+    
     trace.set_tracer_provider(provider)
     FastAPIInstrumentor.instrument_app(app)

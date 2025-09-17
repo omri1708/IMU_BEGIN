@@ -1,8 +1,17 @@
 ui:
-- id: UI-001
-  req:
-  - REQ-001
-  screen: Items
-  route: /items
-  acceptance:
-  - Create + List
+  - id: UI-001
+    req: [REQ-001]
+    screen: Items
+    route: /items
+    acceptance: [Create + List]
+
+  - id: UI-ITEMS
+    screen: Items
+    route: /items
+    req: ["REQ-001"]
+
+  - id: UI-002
+    req: [REQ-002]
+    screen: Items
+    route: /items
+    acceptance: [Delete + Confirm]

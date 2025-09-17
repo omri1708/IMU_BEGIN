@@ -1,0 +1,10 @@
+:root { --border:#e7e7e7; --muted:#6b7280; --bg:#fafafa; }
+body { background:#fff; color:#111; }
+.card { border:1px solid var(--border); border-radius:12px; background:#fff; }
+.btn { padding:8px 12px; border:1px solid var(--border); border-radius:8px; background:#fff; cursor:pointer; }
+.btn.primary { background:#111; color:#fff; border-color:#111; }
+.btn.danger { background:#fee; border-color:#f88; }
+.input { width:100%; padding:9px 10px; border:1px solid var(--border); border-radius:8px; }
+.table { width:100%; border-collapse: collapse; }
+.table th,.table td{ padding:10px; border-bottom:1px solid var(--border); text-align:left }
+.toolbar{ display:flex; gap:8px; align-items:center; justify-content:space-between }
