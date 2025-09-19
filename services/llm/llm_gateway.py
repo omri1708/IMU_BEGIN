@@ -115,6 +115,8 @@ class LLMGateway:
             "answer_chars": len(res.text or ""),
             "token_eff": round((res.completion_tokens or 1) / max(1, res.prompt_tokens + res.completion_tokens), 4),
             "cost_per_token_out": round(res.cost_usd / max(1, res.completion_tokens), 6),
+            "ts": time.time(),
+            "tags": tags or {}
         }
         if tags:
             rec["tags"] = tags

@@ -1,6 +1,6 @@
 # services/backend/grounded.py
 from __future__ import annotations
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Body
 from alignment.attribution import compute_citations
 
 # בחר Gateway עם שרשרת נפילה
@@ -87,3 +87,39 @@ def grounded_strict(
         "latency_ms": int(getattr(res,"latency_ms",0)),
         "ok": bool(getattr(res,"ok",True)),
     }
+
+@router.post("/grounded/verify")
+def grounded_verify(payload: dict = Body(...)):
+    """
+    קלט: {"answer": "...", "sources": [{"id":"s1","text":"..."}]}
+    פלט: {"ok": bool, "notes": [...], "coverage": float, "citations": {...}}
+    """
+    answer = (payload or {}).get("answer", "") or ""
+    sources = (payload or {}).get("sources", []) or []
+    cits = compute_citations(answer, sources)
+    coverage = len([t for t in cits["per_token"] if t]) / max(1, len(cits["per_token"]))
+
+    # בקשת ביקורת מה-LLM (קלה):
+    src_concat = "\n\n".join([s.get("text", "") for s in sources])
+    prompt = {
+        "role": "user",
+        "content": (
+            "You are a strict critic. Given SOURCE and ANSWER, say PASS if the answer strictly "
+            "uses only facts from SOURCE and provides no hallucinated content; otherwise FAIL and list brief reasons.\n"
+            f"SOURCE:\n<<<\n{src_concat}\n>>>\nANSWER:\n{answer}\n\nReply JSON: {{\"verdict\":\"PASS|FAIL\",\"reasons\":[\"...\"]}}"
+        ),
+    }
+    gw = Gateway()
+    res = gw.complete([prompt], tags={"route": "verify"})
+    verdict = "FAIL"
+    reasons = []
+    try:
+        import json as _json
+        j = _json.loads((res.text or "").strip())
+        verdict = str(j.get("verdict", "FAIL")).upper()
+        reasons = j.get("reasons", [])
+    except Exception:
+        reasons = ["LLM returned non-JSON verdict"]
+
+    ok = (coverage >= 0.6) and (verdict == "PASS")
+    return {"ok": ok, "notes": reasons, "coverage": coverage, "citations": cits}

@@ -142,8 +142,16 @@ export default function Items() {
           <span>{page} / {maxPage}</span>
           <button disabled={page >= maxPage} onClick={() => setPage(p => Math.min(maxPage, p + 1))}
             className="border rounded px-2 py-1 disabled:opacity-40">הבא</button>
-
           <button onClick={runDemo} className="ml-auto border rounded px-3 py-1">Grounded demo</button>
+          <button
+            onClick={async ()=> {
+              const payload = { answer: (demo?.answer)||"", sources: demo?.sources||[{id:'s1',text:'Items are records'}] }
+              const r = await fetch('/grounded/verify', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) })
+              const v = await r.json()
+              setToast({ type: v.ok ? 'ok':'err', text: v.ok ? 'PASS':'FAIL' })
+            }}
+            className="border rounded px-3 py-1 ml-2"
+          >Strict verify</button>
         </div>
       </section>
 
