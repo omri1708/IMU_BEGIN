@@ -2,6 +2,7 @@
 from __future__ import annotations
 from fastapi import APIRouter, Query, Body
 from alignment.attribution import compute_citations
+import os
 
 # בחר Gateway עם שרשרת נפילה
 try:
@@ -13,6 +14,7 @@ except Exception:
         from services.llm.llm_gateway import LLMGateway as Gateway
 
 router = APIRouter()
+COVERAGE_MIN = float(os.getenv("EVIDENCE_COV_MIN", "0.8"))
 
 def _fallback_answer(src_text: str, q: str) -> str:
     # תשובה דטרמיניסטית מהמקור (למקרה שאין דרייבר/מפתח)
@@ -98,7 +100,6 @@ def grounded_verify(payload: dict = Body(...)):
     sources = (payload or {}).get("sources", []) or []
     cits = compute_citations(answer, sources)
     coverage = len([t for t in cits["per_token"] if t]) / max(1, len(cits["per_token"]))
-
     # בקשת ביקורת מה-LLM (קלה):
     src_concat = "\n\n".join([s.get("text", "") for s in sources])
     prompt = {
@@ -109,9 +110,20 @@ def grounded_verify(payload: dict = Body(...)):
             f"SOURCE:\n<<<\n{src_concat}\n>>>\nANSWER:\n{answer}\n\nReply JSON: {{\"verdict\":\"PASS|FAIL\",\"reasons\":[\"...\"]}}"
         ),
     }
+    def simple_verdict(answer: str, sources_text: str) -> str:
+        # "מחמיר": כל מילה משמעותית בתשובה (3+ תווים) חייבת להופיע במקור, מותר חריגה עד 20%
+        import re
+        aw = [w.lower() for w in re.findall(r"[A-Za-zא-ת]{3,}", answer)]
+        sw = set([w.lower() for w in re.findall(r"[A-Za-zא-ת]{3,}", sources_text)])
+        if not aw: 
+            return "FAIL: empty"
+        extra = [w for w in aw if w not in sw]
+        leak_ratio = len(extra)/max(1,len(aw))
+        return "FAIL: leak" if leak_ratio > 0.2 else "PASS"
+
     gw = Gateway()
     res = gw.complete([prompt], tags={"route": "verify"})
-    verdict = "FAIL"
+    verdict = simple_verdict(answer, " ".join(s["text"] for s in sources))
     reasons = []
     try:
         import json as _json
@@ -121,5 +133,6 @@ def grounded_verify(payload: dict = Body(...)):
     except Exception:
         reasons = ["LLM returned non-JSON verdict"]
 
-    ok = (coverage >= 0.6) and (verdict == "PASS")
+    ok = (coverage >= COVERAGE_MIN) and (verdict == "PASS")
     return {"ok": ok, "notes": reasons, "coverage": coverage, "citations": cits}
+

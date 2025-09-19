@@ -1,4 +1,6 @@
 from __future__ import annotations
+import json
+import time
 from fastapi import APIRouter
 from pydantic import BaseModel
 from sqlalchemy import create_engine
@@ -54,15 +56,25 @@ async def update_items(item_id: int, body: dict):
     return {"ok": True, "id": row.id}
 
 
-@router.delete('/items/{item_id}', response_model=dict)
-async def delete_items(item_id: int):
+@router.delete("/items/{item_id}")
+def delete_item(item_id: int):
     db = SessionLocal()
-    row = db.query(models.Items).get(item_id)   # Items הוא השם המחולל למחלקה
+    row = db.query(models.Items).get(item_id)
     if not row:
         raise HTTPException(status_code=404, detail="not found")
+    # כתיבת אירוע outbox לפני מחיקה (או אחרי – שניהם בסדר ל-MVP; עדיף לפני)
+    evt = {
+        "id": item_id,
+        "when": time.time(),
+        "what": "item_deleted"
+    }
+    ob = models.Outbox(topic="items", key=str(item_id), action="deleted", payload=json.dumps(evt), status="pending")
+    db.add(ob)
+
     db.delete(row)
     db.commit()
     return {"ok": True}
+
 
 # --- debug PII sample (לבדיקת רדקציה/מדיניות) ---
 @router.get("/debug/pii")
@@ -76,3 +88,9 @@ def debug_pii(req: Request):
     pii, rbac = load_policies()
     role = req.headers.get("X-Role", "user")
     return apply_redaction(sample, role, pii, rbac)
+
+@router.get("/debug/outbox")
+def debug_outbox():
+    db = SessionLocal()
+    rows = db.query(models.Outbox).all()
+    return [{"id":r.id,"topic":r.topic,"action":r.action,"key":r.key,"status":r.status} for r in rows]
