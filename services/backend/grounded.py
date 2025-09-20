@@ -9,9 +9,13 @@ try:
     from services.llm.gateway_cp_wrap import CPGateway as Gateway
 except Exception:
     try:
-        from services.llm.gateway_budget_wrap import BudgetedGateway as Gateway
+        from services.llm.gateway_runtime_budget import RuntimeBudgetedGateway as Gateway
     except Exception:
-        from services.llm.llm_gateway import LLMGateway as Gateway
+        try:
+            from services.llm.gateway_budget_wrap import BudgetedGateway as Gateway
+        except Exception:
+            from services.llm.llm_gateway import LLMGateway as Gateway
+
 
 router = APIRouter()
 COVERAGE_MIN = float(os.getenv("EVIDENCE_COV_MIN", "0.8"))
