@@ -147,6 +147,10 @@ def debug_outbox():
 @router.post("/debug/outbox/flush")
 def debug_outbox_flush(limit: int = 100):
     from datetime import datetime
+    from services.eventing.bus import Bus
+    import json
+
+    bus = Bus()
     db = SessionLocal()
     pending = (db.query(models.Outbox)
                  .filter(models.Outbox.status == "pending")
@@ -155,7 +159,17 @@ def debug_outbox_flush(limit: int = 100):
                  .all())
     cnt = 0
     for r in pending:
-        # כאן היית "שולח" בפועל, אנחנו מסמנים כ־sent
+        # שלח אירוע ל-bus
+        try:
+            payload = json.loads(r.payload) if r.payload else {}
+        except Exception:
+            payload = {"raw": r.payload}
+        bus.publish("items-deleted", {
+            "id": str(r.item_id or ""),
+            "action": r.action,
+            "payload": payload,
+        })
+        # סמן כ-sent
         r.status = "sent"
         r.sent_at = datetime.utcnow()
         cnt += 1
