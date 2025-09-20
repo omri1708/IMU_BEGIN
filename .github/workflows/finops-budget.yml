@@ -1,0 +1,19 @@
+name: FinOps Budget Gate
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+jobs:
+  budget:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install pyyaml
+      - name: KPI rollup
+        run: python ops/kpi_rollup.py --out ops/rollup.json
+      - name: Budget gate
+        env:
+          IMU_ENV: dev
+        run: python ops/budget_gate.py --rollup ops/rollup.json --spec specs/finops.yaml --env $IMU_ENV
