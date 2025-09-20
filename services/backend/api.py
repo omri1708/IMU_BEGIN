@@ -109,9 +109,6 @@ def delete_item(item_id: int, request: Request):
     return JSONResponse({"ok": True, "id": item_id})
 
 
-
-
-
 # --- debug PII sample (לבדיקת רדקציה/מדיניות) ---
 @router.get("/debug/pii")
 def debug_pii(req: Request):
@@ -144,35 +141,22 @@ def debug_outbox():
         })
     return out
 
-@router.post("/debug/outbox/flush")
-def debug_outbox_flush(limit: int = 100):
-    from datetime import datetime
-    from services.eventing.bus import Bus
-    import json
-
-    bus = Bus()
+@router.get("/debug/outbox")
+def debug_outbox():
     db = SessionLocal()
-    pending = (db.query(models.Outbox)
-                 .filter(models.Outbox.status == "pending")
-                 .order_by(models.Outbox.id.asc())
-                 .limit(limit)
-                 .all())
-    cnt = 0
-    for r in pending:
-        # שלח אירוע ל-bus
-        try:
-            payload = json.loads(r.payload) if r.payload else {}
-        except Exception:
-            payload = {"raw": r.payload}
-        bus.publish("items-deleted", {
-            "id": str(r.item_id or ""),
+    rows = db.query(models.Outbox).order_by(models.Outbox.id.desc()).all()
+    out = []
+    for r in rows:
+        out.append({
+            "id": r.id,
+            "topic": r.topic,
+            "key": r.key,
             "action": r.action,
-            "payload": payload,
+            "status": r.status,
+            "item_id": r.item_id,
+            "payload": r.payload,
+            "created_at": str(r.created_at) if r.created_at else None,
+            "sent_at": str(r.sent_at) if r.sent_at else None,
         })
-        # סמן כ-sent
-        r.status = "sent"
-        r.sent_at = datetime.utcnow()
-        cnt += 1
-    db.commit()
-    return {"flushed": cnt}
+    return out
 
