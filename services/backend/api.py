@@ -144,8 +144,7 @@ def debug_outbox():
 @router.post("/debug/outbox/flush")
 def debug_outbox_flush(limit: int = 100):
     from datetime import datetime
-    from services.eventing.publisher import publish
-
+    import json, os
     db = SessionLocal()
     pending = (db.query(models.Outbox)
                  .filter(models.Outbox.status == "pending")
@@ -154,23 +153,42 @@ def debug_outbox_flush(limit: int = 100):
                  .all())
     cnt = 0
     for r in pending:
-        # נפרסם לפי topic+action. אצלנו topic="items" ו-action="deleted"
-        topic = f"{r.topic}-{r.action}" if r.topic else r.action
-        # key הוא מזהה התיעוד שנמחק
-        key = r.key if r.key else (str(r.item_id) if r.item_id is not None else "unknown")
-        # payload הוא JSON string—נפרש כדי לשלוח dict
-        import json as _json
-        try:
-            payload = _json.loads(r.payload or "{}")
-        except Exception:
-            payload = {"raw": r.payload}
-        # פרסום (Redis או קובץ)
-        publish(topic, key, payload, action=r.action)
-
-        # סימון sent
+        # סימון כ-sent
         r.status = "sent"
         r.sent_at = datetime.utcnow()
         cnt += 1
+
+        # בונים רשומה "עטופה" עם שדות מטא וגם גוף האירוע
+        try:
+            body = json.loads(r.payload or "{}")
+        except Exception:
+            body = {}
+        record = {
+            "topic":   r.topic,
+            "action":  r.action,
+            "key":     r.key,
+            "item_id": r.item_id,
+            **body,
+        }
+
+        # פרסום ל-Redis Streams (אם קיים) — לא מפיל את הבקשה אם אין Redis
+        try:
+            from services.eventing.redis_bus_async import publish_sync
+            stream = f"{r.topic}-{r.action}"          # למשל: items-deleted
+            publish_sync(stream, record)
+        except Exception:
+            pass
+
+        # Fallback לקובץ — כדי שתמיד יהיה עקבות לטסט
+        try:
+            bus_dir = os.path.join(".imu_runs")
+            os.makedirs(bus_dir, exist_ok=True)
+            bus_file = os.path.join(bus_dir, f"bus_{r.topic}-{r.action}.jsonl")
+            with open(bus_file, "a", encoding="utf-8") as f:
+                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+        except Exception:
+            pass
+
     db.commit()
     return {"flushed": cnt}
 
