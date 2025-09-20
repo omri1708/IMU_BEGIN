@@ -1,14 +1,20 @@
 from __future__ import annotations
-from logging.config import fileConfig
-from sqlalchemy import engine_from_config, pool
-from alembic import context
-from services.backend.models import Base
+import sys, pathlib  # noqa: E401
+
+BASE_DIR = pathlib.Path(__file__).resolve().parents[1]
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
+
+from logging.config import fileConfig  # noqa: E402
+from sqlalchemy import engine_from_config, pool  # noqa: E402
+from alembic import context  # noqa: E402
+from services.backend import models  # noqa: E402
 
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-target_metadata = Base.metadata
+target_metadata = models.Base.metadata
 
 def run_migrations_offline():
     url = config.get_main_option("sqlalchemy.url")

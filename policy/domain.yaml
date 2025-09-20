@@ -1,0 +1,6 @@
+delete_guard:
+  require_header: X-Admin-Approval       # שם הכותרת כשהאישור נדרש
+  header_required_for_names:             # רק עבור שמות אלה נדרוש את הכותרת
+    - need-approval
+  forbidden_names:                       # שמות שאסור למחוק בכלל
+    - protected
