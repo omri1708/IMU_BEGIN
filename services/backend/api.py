@@ -140,17 +140,11 @@ def debug_outbox():
         })
     return out
 
+
 @router.post("/debug/outbox/flush")
 def debug_outbox_flush(limit: int = 100):
     from datetime import datetime
-    import json, os
-    from pathlib import Path
-
-    # file-sink: נשמור שורות JSONL בתיקיית .imu_runs
-    sink = os.getenv("BUS_SINK", "file")   # אפשר להחליף ל-redis בהמשך
-    bus_dir = Path(".imu_runs")
-    bus_dir.mkdir(parents=True, exist_ok=True)
-    bus_file = bus_dir / "bus_items-deleted.jsonl"
+    from services.eventing.publisher import publish
 
     db = SessionLocal()
     pending = (db.query(models.Outbox)
@@ -158,39 +152,28 @@ def debug_outbox_flush(limit: int = 100):
                  .order_by(models.Outbox.id.asc())
                  .limit(limit)
                  .all())
-
     cnt = 0
-    written = 0
-    # נכתוב לקובץ רק אם sink=file
-    fp = open(bus_file, "a", encoding="utf-8") if sink == "file" else None
-    try:
-        for r in pending:
-            # "שליחה" לסינק (כאן: קובץ JSONL)
-            if fp:
-                try:
-                    payload = json.loads(r.payload) if r.payload else {}
-                except Exception:
-                    payload = {"raw": r.payload}
+    for r in pending:
+        # נפרסם לפי topic+action. אצלנו topic="items" ו-action="deleted"
+        topic = f"{r.topic}-{r.action}" if r.topic else r.action
+        # key הוא מזהה התיעוד שנמחק
+        key = r.key if r.key else (str(r.item_id) if r.item_id is not None else "unknown")
+        # payload הוא JSON string—נפרש כדי לשלוח dict
+        import json as _json
+        try:
+            payload = _json.loads(r.payload or "{}")
+        except Exception:
+            payload = {"raw": r.payload}
+        # פרסום (Redis או קובץ)
+        publish(topic, key, payload, action=r.action)
 
-                line = {
-                    "topic": r.topic or "items",
-                    "key":   r.key or (str(r.item_id) if r.item_id is not None else ""),
-                    "action": r.action,
-                    "payload": payload,
-                }
-                fp.write(json.dumps(line, ensure_ascii=False) + "\n")
-                written += 1
+        # סימון sent
+        r.status = "sent"
+        r.sent_at = datetime.utcnow()
+        cnt += 1
+    db.commit()
+    return {"flushed": cnt}
 
-            # סימון כ־sent
-            r.status = "sent"
-            r.sent_at = datetime.utcnow()
-            cnt += 1
-        db.commit()
-    finally:
-        if fp:
-            fp.close()
-
-    return {"flushed": cnt, "bus_file": str(bus_file), "written": written}
 
 # --- ops: budget status ---
 @router.get("/ops/budget/status")
