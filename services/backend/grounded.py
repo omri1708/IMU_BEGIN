@@ -20,6 +20,10 @@ except Exception:
 router = APIRouter()
 COVERAGE_MIN = float(os.getenv("EVIDENCE_COV_MIN", "0.8"))
 
+from services.llm.gateway_budget_wrap import BudgetedGateway as Gateway
+gw = Gateway()
+
+
 def _fallback_answer(src_text: str, q: str) -> str:
     # תשובה דטרמיניסטית מהמקור (למקרה שאין דרייבר/מפתח)
     sent = (src_text or "").strip().split(".")[0]
@@ -35,7 +39,6 @@ def grounded_demo(
     # קריאת LLM – best-effort
     ans = None; provider="echo"; model="stub"; cost=0.0; lat=0; ok=False
     try:
-        gw = Gateway()
         res = gw.complete([{"role": "user", "content": q}], candidates=None, budget_usd=None)
         provider = getattr(res, "provider", "echo")
         model    = getattr(res, "model", "stub")
@@ -71,6 +74,9 @@ def grounded_strict(
     q: str = Query("Summarize Items"),
     src_text: str = Query("Items are records with name and description, saved via /api/items.")
 ):
+    import os
+    COVERAGE_MIN = float(os.getenv("COVERAGE_MIN", "0.8"))
+
     sources = [{"id":"s1","text":src_text}]
     messages = [
         {"role":"system",
@@ -78,20 +84,45 @@ def grounded_strict(
         {"role":"user",
          "content": f"SOURCE:\n<<<\n{src_text}\n>>>\nQUESTION:\n{q}\nAnswer strictly from SOURCE."}
     ]
-    gw = Gateway()
-    res = gw.complete(messages)
-    answer = (res.text or "").strip() or "insufficient evidence"
+
+    provider, model, cost, lat = "echo", "stub", 0.0, 0
+    answer = None
+    ok_res = True
+
+    try:
+        gw = Gateway()
+        res = gw.complete(messages)  # אל תעביר tags כאן כרגע
+        provider = getattr(res, "provider", provider)
+        model    = getattr(res, "model", model)
+        cost     = float(getattr(res, "cost_usd", cost))
+        lat      = int(getattr(res, "latency_ms", lat))
+        ok_res   = bool(getattr(res, "ok", True))
+        answer   = (getattr(res, "text", "") or "").strip()
+    except Exception:
+        # חסם תקציב/דרייבר איננו ⇒ נפילה לפולבק בטוח
+        answer = None
+        ok_res = False
+        provider, model = "blocked", "budget"
+
+    if not answer or answer.startswith("[driver-error]"):
+        answer = "insufficient evidence"
+        ok_res = False
+
     cits = compute_citations(answer, sources)
+    coverage = len([t for t in cits["per_token"] if t]) / max(1, len(cits["per_token"]))
+
+    ok = ok_res and (answer != "insufficient evidence") and (coverage >= COVERAGE_MIN)
+
     return {
         "answer": answer,
         "sources": sources,
         "citations": cits,
-        "coverage": len([t for t in cits["per_token"] if t]) / max(1, len(cits["per_token"])),
-        "provider": getattr(res,"provider","openai"),
-        "model": getattr(res,"model","gpt-4o-mini"),
-        "cost_usd": round(getattr(res,"cost_usd",0.0), 6),
-        "latency_ms": int(getattr(res,"latency_ms",0)),
-        "ok": bool(getattr(res,"ok",True)),
+        "coverage": coverage,
+        "provider": provider,
+        "model": model,
+        "cost_usd": round(cost, 6),
+        "latency_ms": lat,
+        "ok": ok,
     }
 
 @router.post("/grounded/verify")
@@ -124,8 +155,7 @@ def grounded_verify(payload: dict = Body(...)):
         extra = [w for w in aw if w not in sw]
         leak_ratio = len(extra)/max(1,len(aw))
         return "FAIL: leak" if leak_ratio > 0.2 else "PASS"
-
-    gw = Gateway()
+    
     res = gw.complete([prompt], tags={"route": "verify"})
     verdict = simple_verdict(answer, " ".join(s["text"] for s in sources))
     reasons = []
