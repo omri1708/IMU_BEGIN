@@ -198,3 +198,14 @@ def debug_outbox_flush(limit: int = 100):
 def ops_budget_status():
     from services.selfopt.budget_runtime import read_spend
     return read_spend()
+
+# --- Admin FinOps: /api/admin/finops/rollup?days=7 ---
+@router.get("/admin/finops/rollup")
+def admin_finops_rollup(days: int = 7):
+    from ops.ledger import report, ingest
+    # ingest כל ריצה כדי לעדכן מ־jsonl (מהיר)
+    try:
+        ingest()
+    except Exception:
+        pass
+    return report(days)
