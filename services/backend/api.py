@@ -108,7 +108,6 @@ def delete_item(item_id: int, request: Request):
     db.commit()
     return JSONResponse({"ok": True, "id": item_id})
 
-
 # --- debug PII sample (לבדיקת רדקציה/מדיניות) ---
 @router.get("/debug/pii")
 def debug_pii(req: Request):
@@ -141,22 +140,56 @@ def debug_outbox():
         })
     return out
 
-@router.get("/debug/outbox")
-def debug_outbox():
+@router.post("/debug/outbox/flush")
+def debug_outbox_flush(limit: int = 100):
+    from datetime import datetime
+    import json, os
+    from pathlib import Path
+
+    # file-sink: נשמור שורות JSONL בתיקיית .imu_runs
+    sink = os.getenv("BUS_SINK", "file")   # אפשר להחליף ל-redis בהמשך
+    bus_dir = Path(".imu_runs")
+    bus_dir.mkdir(parents=True, exist_ok=True)
+    bus_file = bus_dir / "bus_items-deleted.jsonl"
+
     db = SessionLocal()
-    rows = db.query(models.Outbox).order_by(models.Outbox.id.desc()).all()
-    out = []
-    for r in rows:
-        out.append({
-            "id": r.id,
-            "topic": r.topic,
-            "key": r.key,
-            "action": r.action,
-            "status": r.status,
-            "item_id": r.item_id,
-            "payload": r.payload,
-            "created_at": str(r.created_at) if r.created_at else None,
-            "sent_at": str(r.sent_at) if r.sent_at else None,
-        })
-    return out
+    pending = (db.query(models.Outbox)
+                 .filter(models.Outbox.status == "pending")
+                 .order_by(models.Outbox.id.asc())
+                 .limit(limit)
+                 .all())
+
+    cnt = 0
+    written = 0
+    # נכתוב לקובץ רק אם sink=file
+    fp = open(bus_file, "a", encoding="utf-8") if sink == "file" else None
+    try:
+        for r in pending:
+            # "שליחה" לסינק (כאן: קובץ JSONL)
+            if fp:
+                try:
+                    payload = json.loads(r.payload) if r.payload else {}
+                except Exception:
+                    payload = {"raw": r.payload}
+
+                line = {
+                    "topic": r.topic or "items",
+                    "key":   r.key or (str(r.item_id) if r.item_id is not None else ""),
+                    "action": r.action,
+                    "payload": payload,
+                }
+                fp.write(json.dumps(line, ensure_ascii=False) + "\n")
+                written += 1
+
+            # סימון כ־sent
+            r.status = "sent"
+            r.sent_at = datetime.utcnow()
+            cnt += 1
+        db.commit()
+    finally:
+        if fp:
+            fp.close()
+
+    return {"flushed": cnt, "bus_file": str(bus_file), "written": written}
+
 
