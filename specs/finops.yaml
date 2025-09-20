@@ -1,0 +1,4 @@
+budgets:
+  dev:
+    daily_usd: 4   # תקציב יומי לסביבת dev
+    monthly_usd: 120   # תקציב חודשי לסביבת dev
