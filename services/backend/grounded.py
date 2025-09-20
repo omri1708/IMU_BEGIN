@@ -20,7 +20,7 @@ except Exception:
 router = APIRouter()
 COVERAGE_MIN = float(os.getenv("EVIDENCE_COV_MIN", "0.8"))
 
-from services.llm.gateway_budget_wrap import BudgetedGateway as Gateway
+from services.llm.gateway_budget_wrap import BudgetedGateway as Gateway  # noqa: E402
 gw = Gateway()
 
 
@@ -37,7 +37,7 @@ def grounded_demo(
     sources = [{"id": "s1", "text": src_text}]
 
     # קריאת LLM – best-effort
-    ans = None; provider="echo"; model="stub"; cost=0.0; lat=0; ok=False
+    ans = None; provider="echo"; model="stub"; cost=0.0; lat=0; ok=False  # noqa: E702
     try:
         res = gw.complete([{"role": "user", "content": q}], candidates=None, budget_usd=None)
         provider = getattr(res, "provider", "echo")
@@ -48,15 +48,17 @@ def grounded_demo(
         ans      = (getattr(res, "text", "") or "").strip()
     except Exception:
         ans = None
-
+    
     # אם אין תשובה/יש driver-error ⇒ נופלים לפולבק מהמֵקור (עדיין מייצרים citations)
     if not ans or ans.startswith("[driver-error]"):
         ans = _fallback_answer(src_text, q)
         ok = False
-
+    
     cits = compute_citations(ans, sources)
-    coverage = len([t for t in cits["per_token"] if t]) / max(1, len(cits["per_token"]))
-
+    coverage = len([t for t in cits["per_token"] if t]) / max(1, len(cits["per_token"]))   
+    CAP = float(os.getenv("MAX_COST_PER_CALL", "0.02"))
+    ok = ok and (cost <= CAP)
+    
     return {
         "answer": ans,
         "sources": sources,
@@ -110,8 +112,9 @@ def grounded_strict(
 
     cits = compute_citations(answer, sources)
     coverage = len([t for t in cits["per_token"] if t]) / max(1, len(cits["per_token"]))
+    CAP = float(os.getenv("MAX_COST_PER_CALL", "0.02"))
 
-    ok = ok_res and (answer != "insufficient evidence") and (coverage >= COVERAGE_MIN)
+    ok = ok_res and (answer != "insufficient evidence") and (coverage >= COVERAGE_MIN) and (cost <= CAP)
 
     return {
         "answer": answer,
