@@ -108,10 +108,6 @@ def delete_item(item_id: int, request: Request):
     db.commit()
     return JSONResponse({"ok": True, "id": item_id})
 
-
-
-
-
 # --- debug PII sample (לבדיקת רדקציה/מדיניות) ---
 @router.get("/debug/pii")
 def debug_pii(req: Request):
