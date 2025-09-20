@@ -1,0 +1,23 @@
+name: FinOps Ledger Report
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+jobs:
+  ledger:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install pyyaml
+      - name: Build ledger
+        run: |
+          python ops/kpi_rollup.py --out ops/rollup.json
+          python ops/ledger.py ingest
+          python ops/ledger.py report --days 14 --out ops/ledger_report.json
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ledger-report
+          path: ops/ledger_report.json
