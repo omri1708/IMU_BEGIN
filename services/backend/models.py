@@ -1,6 +1,5 @@
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, Integer, String, Text, func
-from sqlalchemy import DateTime
+from sqlalchemy import Column, Integer, String, Text, DateTime, func
 
 Base = declarative_base()
 class Items(Base):
@@ -14,10 +13,12 @@ class Items(Base):
     )
 class Outbox(Base):
     __tablename__ = "outbox"
-    id          = Column(Integer, primary_key=True, autoincrement=True)
-    topic       = Column(String, nullable=False)        # "items"
-    key         = Column(String, nullable=True)         # item_id
-    action      = Column(String, nullable=False)        # "deleted"
-    payload     = Column(Text, nullable=False)          # JSON
-    status      = Column(String, nullable=False, default="pending")
-    created_at  = Column(DateTime, server_default=func.now())
+    id         = Column(Integer, primary_key=True, autoincrement=True)
+    topic      = Column(String, nullable=False)          
+    key        = Column(String, nullable=True)
+    action     = Column(String, nullable=False)
+    status     = Column(String, nullable=False, default="pending")
+    item_id    = Column(Integer, nullable=True)
+    payload    = Column(Text, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    sent_at    = Column(DateTime, nullable=True)

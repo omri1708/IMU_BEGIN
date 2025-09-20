@@ -10,7 +10,7 @@ def test_outbox_on_delete():
     item_id = r.json()["id"]
 
     # מחיקה
-    r = client.delete(f"/api/items/{item_id}")
+    r = client.delete(f"/api/items/{item_id}", headers={"X-Admin-Approval": "yes"})
     assert r.status_code == 200
 
     # וידוא outbox

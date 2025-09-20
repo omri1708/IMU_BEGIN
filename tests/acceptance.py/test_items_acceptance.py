@@ -22,5 +22,8 @@ def test_items_crud_and_evidence():
     assert "coverage" in j and "citations" in j
 
     # delete
-    r = client.delete(f"/api/items/{item_id}")
+    r = client.delete(
+        f"/api/items/{item_id}",
+        headers={"X-Admin-Approval": "yes"}   # דרישת המדיניות למחיקה
+    )
     assert r.status_code == 200
