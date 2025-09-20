@@ -191,3 +191,9 @@ def debug_outbox_flush(limit: int = 100):
             fp.close()
 
     return {"flushed": cnt, "bus_file": str(bus_file), "written": written}
+
+# --- ops: budget status ---
+@router.get("/ops/budget/status")
+def ops_budget_status():
+    from services.selfopt.budget_runtime import read_spend
+    return read_spend()
