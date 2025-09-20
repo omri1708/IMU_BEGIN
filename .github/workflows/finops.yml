@@ -10,17 +10,21 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: '3.11' }
-      - run: |
+
+      # זורק שורת KPI דמו אם אין לוג – כדי שהשער ירוץ תמיד
+      - name: Seed KPI log if missing
+        run: |
           python - <<'PY'
           import pathlib, json, time
           p=pathlib.Path(".imu_runs"); p.mkdir(parents=True, exist_ok=True)
           lf=p/"llm_kpis.jsonl"
           if not lf.exists():
-              # נזרוק רישום דמי בלבד כדי שהשער ירוץ
               lf.write_text(json.dumps({"ts":time.time(),"provider":"openai","model":"gpt-4o-mini","cost":0.00001,"latency_ms":500,"ok":True})+"\n", encoding="utf-8")
           print("seeded llm_kpis.jsonl")
           PY
-      - run: python ops/budget_guard.py
+
+      - name: Budget Gate
+        run: python ops/budget_guard.py
         env:
-          BUDGET_DAILY_USD: "5.00"
-          BUDGET_MONTHLY_USD: "120.00"
+          BUDGET_DAILY_USD: "1.00"
+          BUDGET_MONTHLY_USD: "10.00"

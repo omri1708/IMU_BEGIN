@@ -1,6 +1,6 @@
 # ops/budget_guard.py
 from __future__ import annotations
-import os, json, sys, time, calendar, pathlib
+import os, json, sys, time, pathlib
 
 LOG = pathlib.Path(".imu_runs/llm_kpis.jsonl")
 
