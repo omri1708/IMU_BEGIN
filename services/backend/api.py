@@ -11,6 +11,7 @@ from server.middleware.redaction_core import load_policies, apply_redaction
 import yaml
 import os
 from pathlib import Path
+import random, httpx
 
 
 DB_URL = 'sqlite:///./app.db'
@@ -209,3 +210,14 @@ def admin_finops_rollup(days: int = 7):
     except Exception:
         pass
     return report(days)
+
+@router.get("/proxy/catalog")
+def proxy_catalog():
+    # 10% לקטלוג, 90% עונה מקומית
+    if random.random() < 0.10:
+        try:
+            r = httpx.get("http://127.0.0.1:9000/api/ping", timeout=1.5)
+            return {"routed": "catalog", "status": r.status_code, "body": r.json()}
+        except Exception as e:
+            return {"routed": "catalog", "error": str(e)}
+    return {"routed": "backend", "body": {"ok": True}}
