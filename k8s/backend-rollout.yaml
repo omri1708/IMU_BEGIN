@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: backend
+  namespace: imu
+spec:
+  replicas: 2
+  strategy:
+    canary:
+      steps:
+        - setWeight: 10
+        - pause: { duration: 30 }
+        - setWeight: 50
+        - pause: { duration: 60 }
+        - setWeight: 100
+  selector:
+    matchLabels: { app: backend }
+  template:
+    metadata:
+      labels: { app: backend }
+    spec:
+      containers:
+        - name: api
+          image: imu_begin-backend:latest
+          ports: [{ containerPort: 8000 }]
+          env:
+            - name: NLI_REQUIRED
+              value: "0"             # לא לטעון transformers בתוך הקונטיינר
+            - name: EVIDENCE_COV_MIN
+              value: "0.8"
+          envFrom:
+            - secretRef:
+                name: imu-secrets
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: imu
+spec:
+  selector: { app: backend }
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000

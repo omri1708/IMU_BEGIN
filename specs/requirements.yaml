@@ -26,3 +26,17 @@ requirements:
       confidence: 0.7
       effort: 2
       score: 42
+
+- id: M12-EXACTLY-ONCE
+  title: Exactly-once over Redis Streams
+  acceptance:
+    - Duplicate publish → single sink write
+    - Failing event → after N retries goes to DLQ
+  artifacts:
+    - services/eventing/redis_consumer.py
+    - services/eventing/idempotency_store.py
+    - services/eventing/redis_bus_async.py
+    - tests/acceptance.py/test_exactly_once.py
+  tests:
+    - test_exactly_once.py::test_duplicate_injection_processed_once
+    - test_exactly_once.py::test_fail_then_dlq_after_retries

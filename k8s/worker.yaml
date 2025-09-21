@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: outbox-worker
+  namespace: imu
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: outbox-worker }
+  template:
+    metadata:
+      labels: { app: outbox-worker }
+    spec:
+      containers:
+        - name: worker
+          image: imu_begin-backend:latest   # משתמש באותה תמונה — הקובץ worker.py כבר בתוכה
+          command: ["python","-m","services.eventing.worker"]
+          env:
+            - name: DATABASE_URL
+              value: "sqlite:////app/app.db"
+            - name: REDIS_URL
+              value: "redis://redis:6379/0"
+            - name: OUTBOX_STREAM
+              value: "items-deleted"
