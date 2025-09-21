@@ -164,11 +164,14 @@ def debug_outbox_flush(limit: int = 100):
             body = json.loads(r.payload or "{}")
         except Exception:
             body = {}
+        # אירוע עם event_id יציב: עדיפות ל-body.event_id, אחרת Outbox row id
+        event_id = str(body.get("event_id") or r.id)
         record = {
             "topic":   r.topic,
             "action":  r.action,
             "key":     r.key,
             "item_id": r.item_id,
+            "event_id": event_id,
             **body,
         }
 

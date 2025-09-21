@@ -2,6 +2,7 @@ services:
   backend:
     environment:
       - NLI_REQUIRED=0
+      - REDIS_URL=redis://host.docker.internal:6379/0
     build:
       context: .
       dockerfile: Dockerfile.backend

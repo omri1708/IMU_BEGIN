@@ -1,0 +1,10 @@
+{
+  "messages_total": 2,
+  "processed": 0,
+  "duplicates_skipped": 0,
+  "attempts": 2,
+  "failed": 2,
+  "dlq_published": 2,
+  "acks": 2,
+  "processing_ms_avg": 0.0
+}

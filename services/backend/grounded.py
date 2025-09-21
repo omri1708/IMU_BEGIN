@@ -22,10 +22,6 @@ COVERAGE_MIN = float(os.getenv("EVIDENCE_COV_MIN", "0.8"))
 gw = Gateway()
 
 
-from services.llm.gateway_budget_wrap import BudgetedGateway as Gateway  # noqa: E402
-gw = Gateway()
-
-
 def _fallback_answer(src_text: str, q: str) -> str:
     # תשובה דטרמיניסטית מהמקור (למקרה שאין דרייבר/מפתח)
     sent = (src_text or "").strip().split(".")[0]

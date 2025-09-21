@@ -15,3 +15,20 @@ jobs:
       - run: python traceability/trace_gate.py
       - run: python tests/miner/regression_miner.py .imu_runs/junit.xml || true
       - run: python ci/drift_guard.py
+      
+  test-with-redis:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+    env:
+      REDIS_URL: redis://localhost:6379/0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - name: Install deps
+        run: pip install -r requirements.dev.txt
+      - name: Run acceptance (Exactly-once)
+        run: pytest -q tests/acceptance.py/test_exactly_once.py
