@@ -19,8 +19,6 @@ except Exception:
 
 router = APIRouter()
 COVERAGE_MIN = float(os.getenv("EVIDENCE_COV_MIN", "0.8"))
-
-from services.llm.gateway_budget_wrap import BudgetedGateway as Gateway  # noqa: E402
 gw = Gateway()
 
 

@@ -1,0 +1,9 @@
+# כבדים – רק למפתחים מקומיים, לא לריצה בקונטיינר
+transformers==4.44.2
+sentence-transformers==3.0.1
+torch
+tiktoken==0.7.0
+llama-cpp-python==0.2.75
+rapidfuzz==3.9.4
+google-cloud-aiplatform>=1.60.0
+z3-solver
