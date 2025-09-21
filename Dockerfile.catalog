@@ -1,0 +1,11 @@
+# Dockerfile.catalog
+FROM python:3.11-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+WORKDIR /app
+
+# catalog לא צריך את כל הדרישות של הפרויקט
+RUN pip install fastapi==0.115.0 uvicorn==0.30.6
+
+COPY services/micro/catalog /app/services/micro/catalog
+EXPOSE 9000
+CMD ["python", "-m", "uvicorn", "services.micro.catalog.app:app", "--host", "0.0.0.0", "--port", "9000"]

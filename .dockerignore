@@ -1,0 +1,10 @@
+.venv
+__pycache__/
+*.pyc
+.imu_runs/
+node_modules/
+.git/
+web/next/.next/
+web/next/node_modules/
+dist/
+build/

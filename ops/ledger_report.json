@@ -1,0 +1,27 @@
+{
+  "days": 7,
+  "since": "2025-09-14",
+  "today": "2025-09-20",
+  "rows": [
+    {
+      "provider": "openai",
+      "day": "2025-09-19",
+      "calls": 47,
+      "cost_usd": 0.001961,
+      "latency_ms_avg": 6870.8
+    },
+    {
+      "provider": "openai",
+      "day": "2025-09-20",
+      "calls": 94,
+      "cost_usd": 0.005012,
+      "latency_ms_avg": 3227.9
+    }
+  ],
+  "summary_by_provider": {
+    "openai": {
+      "calls": 141,
+      "cost_usd": 0.006973
+    }
+  }
+}

@@ -1,0 +1,36 @@
+services:
+  backend:
+    environment:
+      - NLI_REQUIRED=0
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: imu-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./.imu_runs:/app/.imu_runs  # KPI/ledger שיישמרו בין ריצות
+    restart: unless-stopped
+
+  catalog:
+    build:
+      context: .
+      dockerfile: Dockerfile.catalog
+    container_name: imu-catalog
+    ports:
+      - "9000:9000"
+    restart: unless-stopped
+
+  # אופציונלי: OpenTelemetry COLLECTOR במצב debug בלבד
+  otel:
+    image: otel/opentelemetry-collector:latest
+    container_name: imu-otel
+    command: ["--config=/etc/otel/config.yaml"]
+    volumes:
+      - ./otel-debug.yaml:/etc/otel/config.yaml
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+    restart: unless-stopped
